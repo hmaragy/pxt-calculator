@@ -61,7 +61,7 @@ const Calculator = () => {
   }, []);
 
   useEffect(() => {
-    setInitialInvestment(((isCompounding ? +compoundedNodes : +numberOfNodes) * 10 * +initialPxt2Price).toFixed(2));
+    setInitialInvestment((+numberOfNodes * 10 * +initialPxt2Price).toFixed(2));
   }, [numberOfNodes, initialPxt2Price, isCompounding, compoundedNodes]);
 
   useEffect(() => {
