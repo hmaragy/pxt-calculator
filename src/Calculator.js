@@ -156,7 +156,7 @@ const Calculator = () => {
                 <div className={classes["px-calculator-body-inputs-field-sub"]}>
                   <input
                     onChange={e => {
-                      setNumberOfNodes(e.target.value);
+                      setNumberOfNodes(+e.target.value > 10000 ? 10000 : +e.target.value < 1 ? 1 : +e.target.value);
                     }}
                     value={numberOfNodes}
                     type="number"
