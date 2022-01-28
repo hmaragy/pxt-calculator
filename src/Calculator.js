@@ -83,6 +83,10 @@ const Calculator = () => {
           ).toFixed(2)
       )
     );
+
+    if (compoundedNodes < numberOfNodes) {
+      setCompoundedNodes(numberOfNodes);
+    }
   }, [numberOfNodes, dailyNodeRewards, futurePxt2Price, isCompounding, compoundedNodes, daysUntilNodes]);
 
   useEffect(() => {
