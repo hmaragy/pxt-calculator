@@ -266,7 +266,7 @@ const Calculator = () => {
                     <input
                       value={compoundedNodes}
                       min={1}
-                      onChange={e => setCompoundedNodes(e.target.value)}
+                      onChange={e => setCompoundedNodes(+e.target.value > 10000 ? 10000 : +e.target.value)}
                       type="number"
                       placeholder="0"
                     />
