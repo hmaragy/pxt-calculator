@@ -48,6 +48,12 @@ const Calculator = () => {
 
   const [wenLambo, setWenLambo] = useState("Infinity Years");
 
+  const [isCompounding, setIsCompounding] = useState(false);
+
+  const [compoundedNodes, setCompoundedNodes] = useState(100);
+  const [timeUntilNodes, setTimeUntilNodes] = useState(0);
+  const [daysUntilNodes, setDaysUntilNodes] = useState(0);
+
   useEffect(() => {
     getCurrentPXT2Price().then(res => {
       setCurrentPXT2Price(res);
@@ -55,18 +61,55 @@ const Calculator = () => {
   }, []);
 
   useEffect(() => {
-    setInitialInvestment((+numberOfNodes * 10 * +initialPxt2Price).toFixed(2));
-  }, [numberOfNodes, initialPxt2Price]);
+    setInitialInvestment(((isCompounding ? +compoundedNodes : +numberOfNodes) * 10 * +initialPxt2Price).toFixed(2));
+  }, [numberOfNodes, initialPxt2Price, isCompounding, compoundedNodes]);
 
   useEffect(() => {
-    setDailyRewardEst((+numberOfNodes * +dailyNodeRewards * +futurePxt2Price).toFixed(2));
-    setMonthlyRewardEst((+numberOfNodes * +dailyNodeRewards * 30 * +futurePxt2Price).toFixed(2));
-    setYearlyRewardEst((+numberOfNodes * +dailyNodeRewards * 365 * +futurePxt2Price).toFixed(2));
-
-    setWenLambo(
-      getFormatedStringFromDays((200000 / (+numberOfNodes * +dailyNodeRewards * +futurePxt2Price)).toFixed(2))
+    setDailyRewardEst(
+      ((isCompounding ? +compoundedNodes : +numberOfNodes) * +dailyNodeRewards * +futurePxt2Price).toFixed(2)
     );
-  }, [numberOfNodes, dailyNodeRewards, futurePxt2Price]);
+    setMonthlyRewardEst(
+      ((isCompounding ? +compoundedNodes : +numberOfNodes) * +dailyNodeRewards * 30 * +futurePxt2Price).toFixed(2)
+    );
+    setYearlyRewardEst(
+      ((isCompounding ? +compoundedNodes : +numberOfNodes) * +dailyNodeRewards * 365 * +futurePxt2Price).toFixed(2)
+    );
+    setWenLambo(
+      getFormatedStringFromDays(
+        (isCompounding ? +daysUntilNodes : 0) +
+          +(
+            200000 /
+            ((isCompounding ? +compoundedNodes : +numberOfNodes) * +dailyNodeRewards * +futurePxt2Price)
+          ).toFixed(2)
+      )
+    );
+  }, [numberOfNodes, dailyNodeRewards, futurePxt2Price, isCompounding, compoundedNodes, daysUntilNodes]);
+
+  useEffect(() => {
+    if (isCompounding) {
+      let initialNumberOfNodes = +numberOfNodes;
+      let finalNumberOfNodes = +compoundedNodes;
+      //dailyNodeRewards
+      let days = 0;
+
+      let cumulativePxt2 = 0;
+      while (initialNumberOfNodes < finalNumberOfNodes) {
+        days++;
+
+        cumulativePxt2 += initialNumberOfNodes * +dailyNodeRewards;
+
+        while (cumulativePxt2 >= 10) {
+          initialNumberOfNodes++;
+          cumulativePxt2 -= 10;
+        }
+      }
+      setDaysUntilNodes(days);
+      setTimeUntilNodes(getFormatedStringFromDays(days) || "0 Days");
+    } else {
+      setDaysUntilNodes(0);
+      setTimeUntilNodes(getFormatedStringFromDays(0));
+    }
+  }, [compoundedNodes, dailyNodeRewards, isCompounding, numberOfNodes]);
 
   return (
     <div className={classes["px-container"]}>
@@ -169,26 +212,68 @@ const Calculator = () => {
                 </div>
               </div>
             </div>
-            {/* <div className={classes["px-calculator-body-inputs-field"]}>
-              <div className={classes["px-calculator-body-checkbox-item"]}>
+            <div className={classes["px-calculator-body-inputs-field"]}>
+              <div
+                className={`${classes["px-calculator-body-inputs-item"]} ${classes["px-calculator-body-checkbox-item"]}`}
+              >
                 <div className={classes["px-calculator-body-checkbox-field-sub"]}>
-                  <input type="checkbox" id="enableCompounding" name="enableCompounding" />
+                  <input
+                    value={isCompounding}
+                    onChange={() => {
+                      setIsCompounding(!isCompounding);
+                    }}
+                    type="checkbox"
+                    id="enableCompounding"
+                    name="enableCompounding"
+                  />
                   <label htmlFor="enableCompounding">Enable Compounding.</label>
                 </div>
               </div>
             </div>
             <div className={classes["px-calculator-body-inputs-field"]}></div>
 
-            <div className={classes["px-calculator-body-inputs-field"]}>
-              <div className={classes["px-calculator-body-inputs-item"]}>
-                <div className={classes["px-calculator-body-inputs-field-title"]}>
-                  <h4>Keep compounding until owning how many nodes ?</h4>
-                </div>
-                <div className={classes["px-calculator-body-inputs-field-sub"]}>
-                  <input type="number" placeholder="0" />
+            {isCompounding && (
+              <div className={classes["px-calculator-body-inputs-field"]}>
+                <div className={classes["px-calculator-body-inputs-item"]}>
+                  <div className={classes["px-calculator-body-inputs-field-title"]}>
+                    <h4 style={{ display: "flex", justifyContent: "space-between" }}>
+                      Keep compounding until #nodes reach
+                      <span
+                        className={classes["tooltip"]}
+                        style={{
+                          cursor: "pointer",
+                          background: "black",
+                          color: "white",
+                          padding: "3px",
+                          width: "25px",
+                          height: "25px",
+                          textAlign: "center",
+                          borderRadius: "50%",
+                          display: "inline-flex",
+                          alignContent: "center",
+                          justifyContent: "center",
+                          fontSize: "12px",
+                        }}
+                      >
+                        ?{" "}
+                        <span className={classes["tooltiptext"]}>
+                          You'll start taking profits after the compounding is finished.
+                        </span>
+                      </span>
+                    </h4>
+                  </div>
+                  <div className={classes["px-calculator-body-inputs-field-sub"]}>
+                    <input
+                      value={compoundedNodes}
+                      min={1}
+                      onChange={e => setCompoundedNodes(e.target.value)}
+                      type="number"
+                      placeholder="0"
+                    />
+                  </div>
                 </div>
               </div>
-            </div> */}
+            )}
           </div>
 
           <hr className={classes["px-divider"]} />
@@ -197,10 +282,12 @@ const Calculator = () => {
               <span>Your Initial Investment (USD)</span>
               <span>{initialInvestment}$</span>
             </div>
-            {/* <div className={classes["px-calculator-body-results-field"]}>
-              <span>Will have 50 Nodes after</span>
-              <span>10 Years</span>
-            </div> */}
+            {isCompounding && (
+              <div className={classes["px-calculator-body-results-field"]}>
+                <span>Will have {compoundedNodes} Nodes after</span>
+                <span>{timeUntilNodes}</span>
+              </div>
+            )}
             <div className={classes["px-calculator-body-results-field"]}>
               <span>Rewards Estimation / Day (USD)</span>
               <span>{dailyRewardEst}$</span>
